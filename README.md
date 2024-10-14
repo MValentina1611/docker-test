@@ -47,6 +47,8 @@ services:
       - "3000:3000"
 ```
 
+![](docs/dt-dps.png)
+
 ### 3. 🤖 GitHub Actions
 Se creó un archivo `.yml` dentro del directorio `.github/workflows/` que configura una pipeline de **GitHub Actions** para construir la imagen de Docker y subirla a **Docker Hub** cuando se haga un push a la rama `main`.
 
@@ -82,6 +84,19 @@ jobs:
         push: true
         tags: tu-usuario-docker-hub/docker-test:latest
 ```
+![](docs/dt-wf.png)
+
+![](docs/dt-dockerhub.png)
+
+#### :key: Creación de Secretos en Github
+Los secretos se utilizan para gestionar de forma segura información sensible.
+
+Uso de secretos en el repositorio:
+DOCKER_USERNAME: Almacena el nombre de usuario de Docker Hub.
+DOCKER_PASSWORD: Almacena la contraseña o token de acceso a Docker Hub.
+Estos secretos se usan dentro del pipeline de GitHub Actions para autenticarse en la cuenta de Docker Hub al momento de construir y subir la imagen de Docker. De esta manera, los comandos como docker login pueden acceder a los secretos para autenticar sin que las credenciales queden expuestas en el repositorio público.
+
+![](docs/dt-secrets.png)
 
 ### 4. 🌐 Acceso a la aplicación
 Una vez que la imagen se ha construido y subido a Docker Hub, se levanta el contenedor con el siguiente comando:
@@ -89,9 +104,19 @@ Una vez que la imagen se ha construido y subido a Docker Hub, se levanta el cont
 ```bash
 docker-compose up
 ```
+![](docs/dt-inicio.png)
+
+![](docs/dt-pers.png)
+
+![](docs/dt-logs.png)
 
 Esto levantará el contenedor en el puerto 3000. Se accede a la aplicación desde el navegador usando `http://localhost:3000`.
 
 ## ✅ Conclusión
 
 El proyecto está configurado para un flujo de **CI/CD** sencillo, donde cada cambio en la rama `main` despliega automáticamente la aplicación en Docker Hub, y permitiendo levantarla en cualquier entorno utilizando Docker Compose.
+
+
+
+
+
