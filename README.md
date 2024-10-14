@@ -1,71 +1,97 @@
-# Getting Started with Create React App
+# 🚀 Proyecto React con Docker y GitHub Actions
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-hi
+## 📋 Descripción
 
-## Available Scripts
+Este proyecto contiene una aplicación de React que está dockerizada y configurada para desplegarse automáticamente utilizando **GitHub Actions**. El objetivo es que, al hacer un push al repositorio, la imagen de Docker se construya y se suba automáticamente a **Docker Hub**.
 
-In the project directory, you can run:
+## 🛠️ Pasos para el despliegue automático
 
-### `npm start`
+### 1. 🐳 Configuración de Docker
+Se creó un `Dockerfile` para construir la aplicación de React y exponerla en el puerto 3000. El contenido del `Dockerfile` es el siguiente:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```dockerfile
+# Usa una imagen base de Node
+FROM node:14
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+# Establece el directorio de trabajo
+WORKDIR /app
 
-### `npm test`
+# Copia los archivos de package.json y package-lock.json
+COPY package*.json ./
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+# Instala las dependencias
+RUN npm install
 
-### `npm run build`
+# Copia todo el código de la aplicación al contenedor
+COPY . .
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Compila la aplicación de React
+RUN npm run build
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Expone el puerto 3000
+EXPOSE 3000
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Ejecuta la aplicación
+CMD ["npm", "start"]
+```
 
-### `npm run eject`
+### 2. 📦 Configuración de Docker Compose
+Para simplificar el proceso de levantar el contenedor, se creó el siguiente archivo `docker-compose.yml`:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```yaml
+version: "3.8"
+services:
+  react-app:
+    build: .
+    ports:
+      - "3000:3000"
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 3. 🤖 GitHub Actions
+Se creó un archivo `.yml` dentro del directorio `.github/workflows/` que configura una pipeline de **GitHub Actions** para construir la imagen de Docker y subirla a **Docker Hub** cuando se haga un push a la rama `main`.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```yaml
+name: Build and Push Docker Image
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+on:
+  push:
+    branches:
+      - main
 
-## Learn More
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
 
-### Code Splitting
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: tu-usuario-docker-hub/docker-test:latest
+```
 
-### Analyzing the Bundle Size
+### 4. 🌐 Acceso a la aplicación
+Una vez que la imagen se ha construido y subido a Docker Hub, se levanta el contenedor con el siguiente comando:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+docker-compose up
+```
 
-### Making a Progressive Web App
+Esto levantará el contenedor en el puerto 3000. Se accede a la aplicación desde el navegador usando `http://localhost:3000`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## ✅ Conclusión
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+El proyecto está configurado para un flujo de **CI/CD** sencillo, donde cada cambio en la rama `main` despliega automáticamente la aplicación en Docker Hub, y permitiendo levantarla en cualquier entorno utilizando Docker Compose.
